@@ -27,6 +27,7 @@
 #import <Foundation/Foundation.h>
 #import "L2DModel.h"
 #import "Live2DCubismCore.hpp"
+#import "CubismUserModel.hpp"
 #import "CubismFramework.hpp"
 #import "CubismUserModel.hpp"
 #import "CubismModelSettingJson.hpp"
@@ -45,51 +46,54 @@ using namespace Live2D::Cubism::Framework::Rendering;
    ICubismModelSetting *modelSetting;
 }
 
-@property (nonatomic, readonly, getter=userModel) CubismUserModel *userModel;
-@property (nonatomic, readonly, getter=cubismModel) CubismModel *cubismModel;
+@property (nonatomic, assign, readonly, getter=userModel) CubismUserModel *userModel;
+@property (nonatomic, assign, readonly, getter=cubismModel) CubismModel *cubismModel;
 
 @end
 
 @implementation L2DModel
 
-- (instancetype) initWithJsonPath: (NSString *)jsonPath {
+- (instancetype)initWithJsonPath:(NSString *)jsonPath {
     if (self = [super init]) {
-        NSURL *url = [NSURL fileURLWithPath: jsonPath];
-        
+        NSURL *url = [NSURL fileURLWithPath:jsonPath];
         // Get base directory name.
         baseURL = [url URLByDeletingLastPathComponent];
 
         // Read json file.
-        NSData* data = [NSData dataWithContentsOfURL: url];
-        
+        NSData *data = [NSData dataWithContentsOfURL:url];
+
         // Create settings.
-        modelSetting = new CubismModelSettingJson((const unsigned char *)[data bytes],
-                                                  (unsigned int)[data length]);
-        
+        modelSetting = new CubismModelSettingJson((const unsigned char *)[data bytes], (unsigned int)[data length]);
+
         // Get model file.
-        NSString *modelFileName = [NSString stringWithCString: modelSetting->GetModelFileName()
-                                                     encoding: NSUTF8StringEncoding];
-        NSData* modelData = [NSData dataWithContentsOfURL:
-                             [baseURL URLByAppendingPathComponent:modelFileName]];
-        
+        NSString *modelFileName = [NSString stringWithCString:modelSetting->GetModelFileName() encoding:NSUTF8StringEncoding];
+        NSData *modelData = [NSData dataWithContentsOfURL:[baseURL URLByAppendingPathComponent:modelFileName]];
+
         // Create model.
         model = new CubismUserModel();
-        model->LoadModel((const unsigned char *)[modelData bytes],
-                         (unsigned int)[modelData length]);
-        
+        model->LoadModel((const unsigned char *)[modelData bytes], (unsigned int)[modelData length]);
+
         // Create physics.
-        NSString *physicsFileName = [NSString stringWithCString:modelSetting->GetPhysicsFileName()
-                                                       encoding:NSUTF8StringEncoding];
+        NSString *physicsFileName = [NSString stringWithCString:modelSetting->GetPhysicsFileName() encoding:NSUTF8StringEncoding];
         if (physicsFileName.length > 0) {
-            NSData* physicsData = [NSData dataWithContentsOfURL:
-                                   [baseURL URLByAppendingPathComponent:physicsFileName]];
-            
-            physics = CubismPhysics::Create((const unsigned char *)[physicsData bytes],
-                                            (unsigned int)[physicsData length]);
+            NSData *physicsData = [NSData dataWithContentsOfURL:[baseURL URLByAppendingPathComponent:physicsFileName]];
+            physics = CubismPhysics::Create((const unsigned char *)[physicsData bytes], (unsigned int)[physicsData length]);
         }
     }
-    
+
     return self;
+}
+
+- (void)dealloc {
+    if (modelSetting) {
+        free(modelSetting);
+    }
+    if (model) {
+        free(model);
+    }
+    if (physics) {
+        free(physics);
+    }
 }
 
 - (CubismUserModel*)userModel {
@@ -101,23 +105,39 @@ using namespace Live2D::Cubism::Framework::Rendering;
 }
 
 - (CGSize)modelSize {
-    return CGSizeMake(self.cubismModel->GetCanvasWidth(),
-                      self.cubismModel->GetCanvasHeight());
+    return CGSizeMake(self.cubismModel->GetCanvasWidth(), self.cubismModel->GetCanvasHeight());
 }
 
-- (void)setModelParameterNamed: (NSString *)name withValue: (float)value {
-    const auto cubismParamID = CubismFramework::GetIdManager()->GetId((const char*)[name UTF8String]);
+- (void)setModelParameterNamed:(NSString *)name withValue:(float)value {
+    const auto cubismParamID = CubismFramework::GetIdManager()->GetId((const char *)[name UTF8String]);
     self.cubismModel->SetParameterValue(cubismParamID, value);
 }
 
-- (NSArray*) textureURLs {
-    NSMutableArray *urls = [NSMutableArray array];
+- (float)getValueForModelParameterNamed:(NSString *)name {
+    const auto cubismParamID = CubismFramework::GetIdManager()->GetId((const char *)[name UTF8String]);
+    float value = self.cubismModel->GetParameterValue(cubismParamID);
+    return value;
+}
+
+- (void)setPartsOpacityNamed:(NSString *)name opacity:(float)opacity {
+    const auto cubismPartID = CubismFramework::GetIdManager()->GetId((const char *)[name UTF8String]);
+    self.cubismModel->SetPartOpacity(cubismPartID, opacity);
+}
+
+- (float)getPartsOpacityNamed:(NSString *)name {
+    const auto cubismPartID = CubismFramework::GetIdManager()->GetId((const char *)[name UTF8String]);
+    float opacity = self.cubismModel->GetPartOpacity(cubismPartID);
+    return opacity;
+}
+
+- (NSArray *)textureURLs {
+    NSMutableArray<NSURL *> *urls = [NSMutableArray array];
     for (int i = 0; i < modelSetting->GetTextureCount(); ++i) {
-        NSString *name = [NSString stringWithCString: modelSetting->GetTextureFileName(i)
-                                            encoding: NSUTF8StringEncoding];
-        [urls addObject: [NSURL URLWithString:name relativeToURL:baseURL]];
+        @autoreleasepool {
+            NSString *name = [NSString stringWithCString:modelSetting->GetTextureFileName(i) encoding:NSUTF8StringEncoding];
+            [urls addObject:[NSURL URLWithString:name relativeToURL:baseURL]];
+        }
     }
-    
     return urls;
 }
 
@@ -131,34 +151,30 @@ using namespace Live2D::Cubism::Framework::Rendering;
 
 - (RawFloatArray*) vertexPositionsForDrawable: (int)index {
     int vertexCount = self.cubismModel->GetDrawableVertexCount(index);
-    const float* positions = self.cubismModel->GetDrawableVertices(index);
-    
-    return [[RawFloatArray alloc] initWithCArray: positions
-                                           count: vertexCount];
+    const float *positions = self.cubismModel->GetDrawableVertices(index);
+
+    return [[RawFloatArray alloc] initWithCArray:positions count:vertexCount];
 }
 
 - (RawFloatArray*) vertexTextureCoordinateForDrawable: (int)index {
     int vertexCount = self.cubismModel->GetDrawableVertexCount(index);
-    const csmVector2* uvs = self.cubismModel->GetDrawableVertexUvs(index);
-    
-    return [[RawFloatArray alloc] initWithCArray: reinterpret_cast<const csmFloat32*>(uvs)
-                                           count: vertexCount];
+    const csmVector2 *uvs = self.cubismModel->GetDrawableVertexUvs(index);
+
+    return [[RawFloatArray alloc] initWithCArray:reinterpret_cast<const csmFloat32 *>(uvs) count:vertexCount];
 }
 
 - (RawUShortArray*) vertexIndicesForDrawable: (int)index {
     int indexCount = self.cubismModel->GetDrawableVertexIndexCount(index);
-    const unsigned short* indices = self.cubismModel->GetDrawableVertexIndices(index);
-    
-    return [[RawUShortArray alloc] initWithCArray: indices
-                                            count: indexCount];
+    const unsigned short *indices = self.cubismModel->GetDrawableVertexIndices(index);
+
+    return [[RawUShortArray alloc] initWithCArray:indices count:indexCount];
 }
 
-- (RawIntArray*) masksForDrawable: (int)index {
-    const int* maskCounts = self.cubismModel->GetDrawableMaskCounts();
-    const int** masks = self.cubismModel->GetDrawableMasks();
-    
-    return [[RawIntArray alloc] initWithCArray: masks[index]
-                                         count: maskCounts[index]];
+- (RawIntArray *)masksForDrawable:(int)index {
+    const int *maskCounts = self.cubismModel->GetDrawableMaskCounts();
+    const int **masks = self.cubismModel->GetDrawableMasks();
+
+    return [[RawIntArray alloc] initWithCArray:masks[index] count:maskCounts[index]];
 }
 
 - (bool) cullingModeForDrawable: (int)index {
@@ -186,9 +202,8 @@ using namespace Live2D::Cubism::Framework::Rendering;
     }
 }
 
-- (RawIntArray*) renderOrders {
-    return [[RawIntArray alloc] initWithCArray: self.cubismModel->GetDrawableRenderOrders()
-                                         count: [self drawableCount]];
+- (RawIntArray *)renderOrders {
+    return [[RawIntArray alloc] initWithCArray:self.cubismModel->GetDrawableRenderOrders() count:[self drawableCount]];
 }
 
 - (bool) isRenderOrderDidChangedForDrawable: (int)index {

@@ -66,13 +66,13 @@
     return self;
 }
 
-- (NSArray*)intArray {
+- (NSArray<NSNumber *> *)intArray {
     NSMutableArray *array = [NSMutableArray array];
-    
     for (int i = 0; i < _count; ++i) {
-        [array addObject: [NSNumber numberWithFloat: _ints[i]]];
+        @autoreleasepool {
+            [array addObject:[NSNumber numberWithFloat:_ints[i]]];
+        }
     }
-    
     return array;
 }
 
@@ -94,13 +94,13 @@
     return self;
 }
 
-- (NSArray*)ushortArray {
+- (NSArray<NSNumber *> *)ushortArray {
     NSMutableArray *array = [NSMutableArray array];
-    
     for (int i = 0; i < _count; ++i) {
-        [array addObject: [NSNumber numberWithUnsignedShort: _ushorts[i]]];
+        @autoreleasepool {
+            [array addObject:[NSNumber numberWithUnsignedShort:_ushorts[i]]];
+        }
     }
-    
     return array;
 }
 

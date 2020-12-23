@@ -14,23 +14,45 @@
 #include <simd/simd.h>
 #include "L2DBufferIndex.h"
 
+#define MTL(r, g, b, a) MTLClearColorMake(r, g, b, a)
+#define MakeMTLColor MTL(1.0, 1.0, 1.0, 0.0)
+
 NS_ASSUME_NONNULL_BEGIN
 
 @class MetalRender;
 
-@protocol MetalRendererDelegate <NSObject>
+@protocol MetalRenderDelegate <NSObject>
 @required
 
-- (void)rendererUpdateWithRender:(MetalRender *)renderer durationTime:(NSTimeInterval)duration;
+- (void)renderUpdateWithRender:(MetalRender *)renderer durationTime:(NSTimeInterval)duration;
 
 @end
 
 @interface MetalRender : NSObject
-@property (nonatomic ,weak) id<MetalRendererDelegate> delegate;
-@property (nonatomic) L2DModel *model;
-@property (nonatomic) CGPoint origin;
-@property (nonatomic) CGFloat scale;
-@property (nonatomic) matrix_float4x4 transform;
+@property (nonatomic, weak) id<MetalRenderDelegate> delegate;
+@property (nonatomic, strong) L2DModel *model;
+
+/// Model rendering origin, in normalized device coordinate (NDC).
+///
+/// Default is `(0,0)`.
+///
+/// Set this property will reset `transform` matrix.
+@property (nonatomic, assign) CGPoint origin;
+
+/// Model rendering scale.
+///
+/// Default is `1.0`.
+///
+/// Set this property will reset `transform` matrix.
+@property (nonatomic, assign) CGFloat scale;
+
+/// Transform matrix of model.
+///
+/// Note that set `origin` or `scale` will reset transform matrix.
+@property (nonatomic, assign) matrix_float4x4 transform;
+@end
+
+@interface MetalRender (Renderer)
 
 - (void)startWithView:(MTKView *)view;
 

@@ -11,7 +11,7 @@
 #import <Metal/Metal.h>
 #import <MetalKit/MetalKit.h>
 
-@interface ViewController () <MTKViewDelegate, MetalRendererDelegate>
+@interface ViewController () <MTKViewDelegate, MetalRenderDelegate>
 @property (nonatomic) L2DModel *model;
 @property (nonatomic) MetalRender *renderer;
 @property (nonatomic) MetalRender *OCRenderer;
@@ -40,7 +40,7 @@
         [self removeRenderer:self.renderer];
     }
     self.renderer = [[MetalRender alloc] init];
-    self.renderer.scale = 2.0;
+    self.renderer.scale = 1.0;
     self.renderer.delegate = self;
     self.renderer.model = self.model;
     [self addRenderer:self.renderer];
@@ -97,12 +97,33 @@
     [self.view addSubview:self.mtkView];
     self.mtkView.delegate = self;
     self.mtkView.framebufferOnly = true;
-    self.mtkView.clearColor = MTLClearColorMake(0.0, 0.0, 0.0, 0.0);
-    self.viewPort = {0, 0, self.mtkView.drawableSize.height, self.mtkView.drawableSize.height, 0.0, 1.0}; //调整显示大小
+    self.mtkView.colorPixelFormat = MTLPixelFormatBGRA8Unorm;
+    self.mtkView.clearColor = MakeMTLColor;
+    [self updateMTKViewPort];
+}
+
+- (void)updateMTKViewPort {
+    CGSize size = self.mtkView.drawableSize;
+    MTLViewport viewport = {};
+    viewport.znear = 0.0;
+    viewport.zfar = 1.0;
+    if (size.width > size.height) {
+        viewport.originX = 0.0;
+        viewport.originY = (size.height - size.width) * 0.5;
+        viewport.width = size.width;
+        viewport.height = size.width;
+    } else {
+        viewport.originX = (size.width - size.height) * 0.5;
+        viewport.originY = 0.0;
+        viewport.width = size.height;
+        viewport.height = size.height;
+    }
+    // 调整显示大小
+    self.viewPort = viewport;
 }
 
 - (void)mtkView:(MTKView *)view drawableSizeWillChange:(CGSize)size {
-    
+    [self updateMTKViewPort];
     for (MetalRender *render in self.renderers) {
         [render drawableSizeWillChange:self.mtkView size:size];
     }
@@ -124,7 +145,7 @@
         MTLRenderPassDescriptor *renderOldDescriptor = [[MTLRenderPassDescriptor alloc] init];
         renderOldDescriptor.colorAttachments[0].texture = view.currentDrawable.texture;
         renderOldDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
-        renderOldDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(1.0, 1.0, 1.0, 1.0); // 设置默认颜色
+        renderOldDescriptor.colorAttachments[0].clearColor = MakeMTLColor; // 设置默认颜色
         id<MTLRenderCommandEncoder> encoder = [commandBuffer renderCommandEncoderWithDescriptor:renderOldDescriptor];
         [encoder endEncoding];
         // 然后创建
@@ -132,7 +153,7 @@
         renderPassDescriptor.colorAttachments[0].texture = view.currentDrawable.texture;
         renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionLoad;
         renderPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
-        renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(1.0, 1.0, 1.0, 1.0); // 设置默认颜色
+        renderPassDescriptor.colorAttachments[0].clearColor = MakeMTLColor; // 设置默认颜色
         
         for (MetalRender *render in self.renderers) {
             [render beginRenderWithTime:time viewPort:self.viewPort commandBuffer:commandBuffer passDescriptor:renderPassDescriptor];
@@ -142,7 +163,7 @@
     }
 }
 
-- (void)rendererUpdateWithRender:(MetalRender *)renderer durationTime:(NSTimeInterval)duration {
+- (void)renderUpdateWithRender:(MetalRender *)renderer durationTime:(NSTimeInterval)duration {
     CGPoint origin = self.view.frame.origin;
     
     CGSize size = self.view.frame.size;

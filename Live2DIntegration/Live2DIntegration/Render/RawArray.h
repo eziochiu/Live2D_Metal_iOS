@@ -38,7 +38,7 @@
 /// Init with C array and lengh in number of floats.
 - (instancetype)initWithCArray: (const float*)floats count: (int)count;
 
-- (NSArray*)floatArray;
+- (NSArray<NSNumber *> *)floatArray;
 
 /// Index access.
 - (float)objectAtIndexedSubscript: (NSUInteger)index;
@@ -59,7 +59,7 @@
 /// Index access.
 - (int)objectAtIndexedSubscript: (NSUInteger)index;
 
-- (NSArray*)intArray;
+- (NSArray<NSNumber *> *)intArray;
 
 @end
 
@@ -74,7 +74,7 @@
 /// Init with C array and lengh in number of ushorts.
 - (instancetype)initWithCArray: (const unsigned short*)ushorts count: (int)count;
 
-- (NSArray*)ushortArray;
+- (NSArray<NSNumber *> *)ushortArray;
 
 /// Index access.
 - (unsigned short)objectAtIndexedSubscript: (NSUInteger)index;
