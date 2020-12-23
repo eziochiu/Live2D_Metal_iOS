@@ -15,7 +15,7 @@
 #include "L2DBufferIndex.h"
 
 #define MTL(r, g, b, a) MTLClearColorMake(r, g, b, a)
-#define MakeMTLColor MTL(1.0, 1.0, 1.0, 0.0)
+#define MakeMTLColor MTL(0.0, 0.0, 0.0, 0.0)
 
 NS_ASSUME_NONNULL_BEGIN
 

@@ -249,12 +249,11 @@
     pipelineDesc.fragmentFunction = [library newFunctionWithName:@"mask_fragment"];
 
     pipelineDesc.colorAttachments[0].rgbBlendOperation = MTLBlendOperationAdd;
-    pipelineDesc.colorAttachments[0].alphaBlendOperation = MTLBlendOperationAdd;
-    
-    pipelineDesc.colorAttachments[0].sourceRGBBlendFactor = MTLBlendFactorSourceAlpha;
-    pipelineDesc.colorAttachments[0].sourceAlphaBlendFactor = MTLBlendFactorSourceAlpha;
-    
+    pipelineDesc.colorAttachments[0].sourceRGBBlendFactor = MTLBlendFactorOne;
     pipelineDesc.colorAttachments[0].destinationRGBBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
+
+    pipelineDesc.colorAttachments[0].alphaBlendOperation = MTLBlendOperationAdd;
+    pipelineDesc.colorAttachments[0].sourceAlphaBlendFactor = MTLBlendFactorOne;
     pipelineDesc.colorAttachments[0].destinationAlphaBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
 
     self.pipelineStateMasking = [device newRenderPipelineStateWithDescriptor:pipelineDesc error:&error];
@@ -296,13 +295,13 @@
                 }
             }
 
+            if (needSorting) {
+                NSArray<NSNumber *> *renderOrders = model.renderOrders.intArray;
+                self.drawableSorted = [self.drawables sortedArrayUsingComparator:^NSComparisonResult(MetalDrawable *obj1, MetalDrawable *obj2) {
+                    return renderOrders[obj1.drawableIndex].intValue > renderOrders[obj2.drawableIndex].intValue;
+                }];
+            }
         }
-    }
-    if (needSorting) {
-        NSArray<NSNumber *> *renderOrders = model.renderOrders.intArray;
-        self.drawableSorted = [self.drawables sortedArrayUsingComparator:^NSComparisonResult(MetalDrawable *obj1, MetalDrawable *obj2) {
-            return renderOrders[obj1.drawableIndex].intValue > renderOrders[obj2.drawableIndex].intValue;
-        }];
     }
 }
 
