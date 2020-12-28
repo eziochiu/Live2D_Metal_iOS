@@ -7,8 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		849A040E258C3B4E0022ACB7 /* mask.metal in Sources */ = {isa = PBXBuildFile; fileRef = 849A0409258C3B4E0022ACB7 /* mask.metal */; };
-		849A040F258C3B4E0022ACB7 /* basic.metal in Sources */ = {isa = PBXBuildFile; fileRef = 849A040A258C3B4E0022ACB7 /* basic.metal */; };
+		849A040E258C3B4E0022ACB7 /* mask.metal in Sources */ = {isa = PBXBuildFile; fileRef = 849A0409258C3B4E0022ACB7 /* mask.metal */; settings = {COMPILER_FLAGS = "-std=ios-metal1.2"; }; };
+		849A040F258C3B4E0022ACB7 /* basic.metal in Sources */ = {isa = PBXBuildFile; fileRef = 849A040A258C3B4E0022ACB7 /* basic.metal */; settings = {COMPILER_FLAGS = "-std=ios-metal1.2"; }; };
 		849A0417258C3C010022ACB7 /* L2DModel.mm in Sources */ = {isa = PBXBuildFile; fileRef = 849A0414258C3C010022ACB7 /* L2DModel.mm */; };
 		849A0418258C3C010022ACB7 /* L2DCubism.mm in Sources */ = {isa = PBXBuildFile; fileRef = 849A0416258C3C010022ACB7 /* L2DCubism.mm */; };
 		849A041C258C3C450022ACB7 /* MetalDrawable.m in Sources */ = {isa = PBXBuildFile; fileRef = 849A041B258C3C450022ACB7 /* MetalDrawable.m */; };
