@@ -432,12 +432,19 @@
 
 - (void)setScale:(CGFloat)scale {
     _scale = scale;
+    
+//    1        0.6        0.6
+//    2        1.2        0.6
+//    3        1.8        0.6
+//    4        2.4        0.6
+//    5        3.0        0.6
+//    6        3.6        0.6
 
     simd_float4x4 translationMatrix = {
         simd_make_float4(self.scale, 0.0, 0.0, self.origin.x),
         simd_make_float4(0.0, self.scale, 0.0, self.origin.y),
-        simd_make_float4(0.0, 0.0, 1.0, 0.0),
-        simd_make_float4(self.origin.x, self.origin.y, 0.0, 1.0)};
+        simd_make_float4(0.0, 0.0, self.scale * 0.6, 0.0),
+        simd_make_float4(self.origin.x, self.origin.y, 0.0, self.scale * 0.6)};
     self.transform = translationMatrix;
 }
 
@@ -447,8 +454,8 @@
     simd_float4x4 translationMatrix = simd_matrix_from_rows(
         simd_make_float4(self.scale, 0.0, 0.0, self.origin.x),
         simd_make_float4(0.0, self.scale, 0.0, self.origin.y),
-        simd_make_float4(0.0, 0.0, 1.0, 0.0),
-        simd_make_float4(self.origin.x, self.origin.y, 0.0, 1.0));
+        simd_make_float4(0.0, 0.0, self.scale * 0.6, 0.0),
+        simd_make_float4(self.origin.x, self.origin.y, 0.0, self.scale * 0.6));
     self.transform = translationMatrix;
 }
 
